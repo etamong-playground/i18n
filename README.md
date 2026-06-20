@@ -1,4 +1,6 @@
-# @etamong-lab/i18n
+> Canonical: https://github.com/etamong-playground/i18n | Mirror: https://git.m.etamong.com/etamong-playground/i18n (read-only)
+
+# @etamong-playground/i18n
 
 Shared, framework-agnostic React i18n engine for etamong-lab apps. Plain React
 Context — works in Vite + React and Next.js (App Router, inside a `"use client"`
@@ -7,30 +9,29 @@ boundary). The package owns the **machinery**; each app owns its **dictionaries*
 ## Install
 
 ```sh
-pnpm add @etamong-lab/i18n
+pnpm add @etamong-playground/i18n
 ```
 
-Resolving `@etamong-lab/*` requires the GitLab registry in `.npmrc` (group-level
-endpoint so every `@etamong-lab` package resolves):
+Resolving `@etamong-playground/*` from GitHub Packages requires the registry in `.npmrc`:
 
 ```
-@etamong-lab:registry=https://gitlab.com/api/v4/groups/<etamong-lab-group-id>/-/packages/npm/
+@etamong-playground:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=<your-github-token>
 ```
 
 ## Usage
 
 ```ts
 // app/i18n.ts
-import { createI18n } from "@etamong-lab/i18n";
+import { createI18n } from "@etamong-playground/i18n";
 import ko from "./locales/ko";
 import en from "./locales/en";
-import ja from "./locales/ja";
 
 export const { I18nProvider, useI18n, LanguageSwitcher } = createI18n({
-  locales: ["ko", "en", "ja"] as const,
+  locales: ["ko", "en"] as const,
   defaultLocale: "ko",
-  dictionaries: { ko, en, ja },
-  labels: { ko: "한국어", en: "English", ja: "日本語" },
+  dictionaries: { ko, en },
+  labels: { ko: "한국어", en: "English" },
 });
 
 export type Dict = typeof ko; // dictionaries are checked against this shape
@@ -61,4 +62,7 @@ is stored yet.
 
 ## Release
 
-Push a `vX.Y.Z` tag — CI publishes to this project's GitLab npm registry.
+Push a `vX.Y.Z` tag — CI publishes to GitHub Packages (`@etamong-playground/i18n`)
+and Forgejo Packages (`@etamong-playground/i18n` at `git.m.etamong.com`).
+
+The tag must match `version` in `package.json` or the publish job fails.
