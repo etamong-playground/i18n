@@ -1,8 +1,10 @@
-> Canonical: https://github.com/etamong-playground/i18n | Mirror: https://git.m.etamong.com/etamong-playground/i18n (read-only)
-
 # @etamong-playground/i18n
 
-Shared, framework-agnostic React i18n engine for etamong-lab apps. Plain React
+> **About** — One of several shared libraries behind a personal homelab "fleet" of small apps (error handling · audit logging · encryption-at-rest · i18n · UI · …). Published to show the **design decisions** behind these cross-cutting concerns. It is authored and maintained with [Claude Code](https://www.anthropic.com/claude-code) (Anthropic's agentic CLI), not hand-written.
+>
+> **This is a public repository** — keep internal infrastructure details (hostnames, secret/Vault paths, private URLs, internal issue/MR references) out of code, comments, README, and commit messages.
+
+Shared, framework-agnostic React i18n engine for etamong-playground apps. Plain React
 Context — works in Vite + React and Next.js (App Router, inside a `"use client"`
 boundary). The package owns the **machinery**; each app owns its **dictionaries**.
 
@@ -62,7 +64,6 @@ is stored yet.
 
 ## Release
 
-Push a `vX.Y.Z` tag — CI publishes to GitHub Packages (`@etamong-playground/i18n`)
-and Forgejo Packages (`@etamong-playground/i18n` at `git.m.etamong.com`).
+Push a `vX.Y.Z` tag — CI publishes to GitHub Packages (`@etamong-playground/i18n`).
 
 The tag must match `version` in `package.json` or the publish job fails.
