@@ -67,3 +67,11 @@ is stored yet.
 Push a `vX.Y.Z` tag — CI publishes to GitHub Packages (`@etamong-playground/i18n`).
 
 The tag must match `version` in `package.json` or the publish job fails.
+
+## Acknowledgements
+
+Built for [React](https://react.dev) (peer dependency, MIT).
+
+## License
+
+MIT — see [LICENSE](LICENSE).
