@@ -10,7 +10,7 @@ on:
 
 jobs:
   publish:
-    runs-on: ubuntu-latest
+    runs-on: arc-etamong-playground
     permissions:
       contents: read
       packages: write
@@ -46,7 +46,7 @@ jobs:
       # ── Fetch Forgejo npm token from Vault ─────────────────────────
       - uses: hashicorp/vault-action@v3
         with:
-          url: https://vault.m.etamong.com
+          url: http://vault.vault.svc:8200
           method: jwt
           path: github
           role: npm-publish
