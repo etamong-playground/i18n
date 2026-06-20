@@ -5,12 +5,17 @@ on:
     tags:
       - 'v*.*.*'
 
+# Forgejo token fetched from Vault at runtime (role: npm-publish on auth/jwt/github).
+# No GitHub org/repo secrets used.
+
 jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
+      id-token: write   # needed for Vault JWT auth
+
     steps:
       - uses: actions/checkout@v4
 
@@ -38,9 +43,19 @@ jobs:
             exit 1
           fi
 
+      # ── Fetch Forgejo npm token from Vault ─────────────────────────
+      - uses: hashicorp/vault-action@v3
+        with:
+          url: https://vault.m.etamong.com
+          method: jwt
+          path: github
+          role: npm-publish
+          jwtGithubAudience: https://vault.m.etamong.com
+          secrets: |
+            homelab/apps/forgejo/npm-publish token | FORGEJO_NPM_TOKEN
+
       - name: Publish to GitHub Packages
         run: |
-          # Rewrite scope for @etamong-playground
           node -e "
             const fs = require('fs');
             const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
@@ -59,12 +74,13 @@ jobs:
           node -e "
             const fs = require('fs');
             const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-            pkg.name = pkg.name.replace('@etamong-playground/', '@etamong-playground/');
+            pkg.name = pkg.name.replace('@etamong-lab/', '@etamong-playground/');
+            delete pkg.publishConfig;
             pkg.publishConfig = { registry: 'https://git.m.etamong.com/api/packages/etamong-playground/npm/' };
             fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
           "
           FORGEJO_REGISTRY="https://git.m.etamong.com/api/packages/etamong-playground/npm/"
-          echo "//git.m.etamong.com/api/packages/etamong-playground/npm/:_authToken=${{ secrets.FORGEJO_NPM_TOKEN }}" > .npmrc
+          echo "//git.m.etamong.com/api/packages/etamong-playground/npm/:_authToken=${FORGEJO_NPM_TOKEN}" > .npmrc
           npm publish --registry "$FORGEJO_REGISTRY"
         env:
-          FORGEJO_NPM_TOKEN: ${{ secrets.FORGEJO_NPM_TOKEN }}
+          FORGEJO_NPM_TOKEN: ${{ env.FORGEJO_NPM_TOKEN }}
