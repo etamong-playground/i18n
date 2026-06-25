@@ -55,7 +55,11 @@ jobs:
       # npmjs.com for etamong-playground/i18n, remove NPM_TOKEN and this env
       # line — npm will publish token-less with OIDC provenance auto-attached.
       - name: Publish to npmjs
-        run: npm publish --access public --registry https://registry.npmjs.org
+        run: |
+          # Bootstrap auth via explicit .npmrc. After a Trusted Publisher is configured on
+          # npmjs, this step moves to setup-node registry-url + id-token OIDC (no token).
+          printf '@etamong-playground:registry=https://registry.npmjs.org\n//registry.npmjs.org/:_authToken=%s\n' "$NODE_AUTH_TOKEN" > .npmrc
+          npm publish --access public --registry https://registry.npmjs.org
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
