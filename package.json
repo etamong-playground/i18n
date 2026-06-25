@@ -1,5 +1,5 @@
 {
-  "name": "@etamong-lab/i18n",
+  "name": "@etamong-playground/i18n",
   "version": "0.1.0",
   "description": "Shared framework-agnostic React i18n engine (typed createI18n factory, provider, hook, interpolate, language switcher) for etamong-lab apps.",
   "type": "module",
@@ -21,6 +21,9 @@
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "peerDependencies": {
     "react": ">=18"
   },
@@ -30,5 +33,5 @@
     "tsup": "^8.3.5",
     "typescript": "^5.6.3"
   },
-  "license": "UNLICENSED"
+  "license": "MIT"
 }
