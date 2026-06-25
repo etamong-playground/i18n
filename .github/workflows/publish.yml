@@ -1,13 +1,14 @@
-name: publish
+name: Publish
 
-# Publish the package to GitHub Packages on a version tag. The repo's
-# package.json still carries the legacy @etamong-lab name + a GitLab
-# publishConfig; both are rewritten at publish time so the package lands as
-# @etamong-playground/<name> on GitHub Packages (the org scope GitHub Packages
-# requires). Uses the built-in GITHUB_TOKEN — no external PAT needed.
+# Publishes @etamong-playground/i18n on a version tag (or manual dispatch):
+#   1. npmjs.com  — canonical public registry
+#   2. GitHub Packages — mirror (org-scoped, requires @etamong-playground/ name)
 #
-# workflow_dispatch with a `tag` input backfills already-existing tags
-# (v0.28.2, v0.29.1, …) that predate this workflow.
+# npmjs publish is bootstrapped with NPM_TOKEN (repo secret) until a Trusted
+# Publisher is configured on npmjs.com; once set, remove NPM_TOKEN and npm
+# publishes token-less with OIDC provenance auto-attached.
+#
+# workflow_dispatch with a `tag` input backfills existing tags manually.
 
 on:
   push:
@@ -15,12 +16,13 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'existing tag to (re)publish, e.g. v0.28.2'
+        description: 'existing tag to (re)publish, e.g. v0.1.0'
         required: true
 
 permissions:
   contents: read
   packages: write
+  id-token: write   # required for future npmjs Trusted Publisher (OIDC provenance)
 
 jobs:
   publish:
@@ -29,36 +31,38 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.tag || github.ref }}
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.4
+
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
-      - run: corepack enable && corepack prepare pnpm@10 --activate
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm build
-      - name: publish to the host's package registry
+          node-version: '24'
+          cache: pnpm
+
+      - name: Ensure npm >= 11.5.1
+        run: npm install -g npm@latest
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      # ── Publish to npmjs (canonical) ──────────────────────────────────
+      # NODE_AUTH_TOKEN is bootstrap-only. Once a Trusted Publisher is set on
+      # npmjs.com for etamong-playground/i18n, remove NPM_TOKEN and this env
+      # line — npm will publish token-less with OIDC provenance auto-attached.
+      - name: Publish to npmjs
+        run: npm publish --access public --registry https://registry.npmjs.org
         env:
-          # GitHub: the built-in GITHUB_TOKEN can publish to GitHub Packages.
-          # Forgejo: the built-in token CANNOT publish packages, so an org-level
-          # Actions secret (Vault homelab/apps/forgejo/npm-publish) is used.
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          FORGEJO_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # ── Publish to GitHub Packages (mirror) ───────────────────────────
+      - name: Publish to GitHub Packages
         run: |
-          set -eu
-          PKG="@etamong-playground/$(basename "$GITHUB_REPOSITORY")"
-          npm pkg set name="$PKG"
-          npm pkg delete publishConfig
-          # One file, both hosts: Forgejo Actions reads .github/workflows too.
-          # Detect by github.com (always set on GitHub); anything else is the
-          # Forgejo instance (its GITHUB_SERVER_URL is the internal service url).
-          echo "GITHUB_SERVER_URL=${GITHUB_SERVER_URL:-<unset>}"
-          case "${GITHUB_SERVER_URL:-}" in
-            *github.com*)
-              REG="https://npm.pkg.github.com/"; HOST="npm.pkg.github.com"; TOKEN="$GH_TOKEN" ;;
-            *)
-              REG="https://git.m.etamong.com/api/packages/etamong-playground/npm/"
-              HOST="git.m.etamong.com/api/packages/etamong-playground/npm"; TOKEN="$FORGEJO_TOKEN" ;;
-          esac
-          test -n "$TOKEN" || { echo "no publish token for this host"; exit 1; }
-          printf '@etamong-playground:registry=%s\n//%s/:_authToken=%s\n' "$REG" "$HOST" "$TOKEN" > .npmrc
-          echo "publishing $PKG to $REG"
-          npm publish --registry="$REG"
+          printf '//npm.pkg.github.com/:_authToken=%s\n' "$GITHUB_TOKEN" > .npmrc
+          npm publish --access public --registry https://npm.pkg.github.com
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
