@@ -54,17 +54,18 @@ jobs:
       # Token-less OIDC trusted publishing: id-token: write + npmjs Trusted Publisher
       # config → npm exchanges the GitHub OIDC token for a short-lived publish token
       # and auto-attaches provenance. No NPM_TOKEN secret required.
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
+      #
+      # Do NOT use actions/setup-node with registry-url here: it writes a placeholder
+      # NODE_AUTH_TOKEN into NPM_CONFIG_USERCONFIG which overrides OIDC and breaks auth.
       - name: Publish to npmjs (OIDC trusted publishing)
         run: |
-          rm -f .npmrc   # ensure no stray scope/token .npmrc redirects or overrides OIDC
+          # Token-less OIDC: id-token: write + the npmjs Trusted Publisher. Do NOT use
+          # setup-node registry-url here — it writes a placeholder NODE_AUTH_TOKEN that
+          # overrides OIDC. Clear any stray npmrc so npm uses OIDC against the default
+          # registry (registry.npmjs.org).
+          rm -f .npmrc
+          npm config delete //registry.npmjs.org/:_authToken 2>/dev/null || true
           npm publish --access public
-        # token-less: permissions.id-token: write + the npmjs Trusted Publisher let npm
-        # exchange the GitHub OIDC token for a short-lived publish token and auto-attach
-        # provenance. Do NOT set NODE_AUTH_TOKEN here.
 
       # ── Publish to GitHub Packages (mirror) ───────────────────────────
       - name: Publish to GitHub Packages
