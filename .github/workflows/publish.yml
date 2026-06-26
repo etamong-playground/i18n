@@ -1,12 +1,12 @@
 name: Publish
 
 # Publishes @etamong-playground/i18n on a version tag (or manual dispatch):
-#   1. npmjs.com  — canonical public registry
+#   1. npmjs.com  — canonical public registry (token-less OIDC trusted publishing)
 #   2. GitHub Packages — mirror (org-scoped, requires @etamong-playground/ name)
 #
-# npmjs publish is bootstrapped with NPM_TOKEN (repo secret) until a Trusted
-# Publisher is configured on npmjs.com; once set, remove NPM_TOKEN and npm
-# publishes token-less with OIDC provenance auto-attached.
+# npmjs publish uses OIDC trusted publishing: id-token: write + the npmjs Trusted
+# Publisher config lets npm exchange the GitHub OIDC token for a short-lived publish
+# token with provenance auto-attached. No NPM_TOKEN secret required.
 #
 # workflow_dispatch with a `tag` input backfills existing tags manually.
 
@@ -22,7 +22,7 @@ on:
 permissions:
   contents: read
   packages: write
-  id-token: write   # required for future npmjs Trusted Publisher (OIDC provenance)
+  id-token: write   # required for npmjs OIDC trusted publishing (provenance)
 
 jobs:
   publish:
@@ -51,17 +51,20 @@ jobs:
         run: pnpm build
 
       # ── Publish to npmjs (canonical) ──────────────────────────────────
-      # NODE_AUTH_TOKEN is bootstrap-only. Once a Trusted Publisher is set on
-      # npmjs.com for etamong-playground/i18n, remove NPM_TOKEN and this env
-      # line — npm will publish token-less with OIDC provenance auto-attached.
-      - name: Publish to npmjs
+      # Token-less OIDC trusted publishing: id-token: write + npmjs Trusted Publisher
+      # config → npm exchanges the GitHub OIDC token for a short-lived publish token
+      # and auto-attaches provenance. No NPM_TOKEN secret required.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Publish to npmjs (OIDC trusted publishing)
         run: |
-          # Bootstrap auth via explicit .npmrc. After a Trusted Publisher is configured on
-          # npmjs, this step moves to setup-node registry-url + id-token OIDC (no token).
-          printf '@etamong-playground:registry=https://registry.npmjs.org\n//registry.npmjs.org/:_authToken=%s\n' "$NODE_AUTH_TOKEN" > .npmrc
-          npm publish --access public --registry https://registry.npmjs.org
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          rm -f .npmrc   # ensure no stray scope/token .npmrc redirects or overrides OIDC
+          npm publish --access public
+        # token-less: permissions.id-token: write + the npmjs Trusted Publisher let npm
+        # exchange the GitHub OIDC token for a short-lived publish token and auto-attach
+        # provenance. Do NOT set NODE_AUTH_TOKEN here.
 
       # ── Publish to GitHub Packages (mirror) ───────────────────────────
       - name: Publish to GitHub Packages
