@@ -1,6 +1,6 @@
 {
   "name": "@etamong-playground/i18n",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Shared framework-agnostic React i18n engine (typed createI18n factory, provider, hook, interpolate, language switcher) for etamong-lab apps.",
   "type": "module",
   "main": "./dist/index.cjs",
