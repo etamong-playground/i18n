@@ -1,3 +1,5 @@
+> ⚠️ **Deprecated.** This standalone package is no longer used — its runtime i18n (KO+EN, system-default, EN fallback) now ships built into [`@etamong-playground/ui`](https://www.npmjs.com/package/@etamong-playground/ui) (`I18nProvider` / `useT` / `LanguageSwitcher`, ≥ v0.36.0), which also carries a one-time migration of the legacy `locale` storage key. Its former consumers (account, shortener) have migrated. See planning#818.
+
 # @etamong-playground/i18n
 
 > **About** — One of several small shared libraries used across a personal "fleet" of small apps (error handling · audit logging · encryption-at-rest · i18n · UI · …). Authored and maintained with [Claude Code](https://www.anthropic.com/claude-code) (Anthropic's agentic CLI). Each README documents the design rationale behind the library.
