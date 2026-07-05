@@ -5,7 +5,7 @@
     "type": "git",
     "url": "git+https://github.com/etamong-playground/i18n.git"
   },
-  "description": "Shared framework-agnostic React i18n engine (typed createI18n factory, provider, hook, interpolate, language switcher) for etamong-lab apps.",
+  "description": "[DEPRECATED — use @etamong-playground/ui built-in i18n] KO+EN runtime i18n",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
